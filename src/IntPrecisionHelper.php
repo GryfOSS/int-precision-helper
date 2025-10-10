@@ -27,7 +27,7 @@ abstract class IntPrecisionHelper
      * @param string $value The string value to convert
      * @param bool $lessPrecise Less precise mode uses float conversion, which may lead to precision loss for very large numbers, but is faster.
      * @return int The normalized integer value
-     * @throws InvalidArgumentException If the input string is not a valid number
+     * @throws InvalidArgumentException If the input string is not a valid number or contains scientific notation
      */
     public static function fromString(string $value, bool $lessPrecise = false): int
     {
@@ -35,8 +35,13 @@ abstract class IntPrecisionHelper
             throw new \InvalidArgumentException("Input value '{$value}' is not a valid number");
         }
 
+        // Check for scientific notation (e.g., 1.23e3, 1.23E-2)
+        if (preg_match('/[eE]/', $value)) {
+            throw new \InvalidArgumentException("Scientific notation is not supported. Input value '{$value}' contains 'e' or 'E'");
+        }
+
         if ($lessPrecise) {
-            return intval(floatval($value) * static::PRECISION_FACTOR);
+            return intval(round(floatval($value) * static::PRECISION_FACTOR));
         }
 
         return intval(bcround(bcmul($value, strval(static::PRECISION_FACTOR), static::BCMATH_SCALE), 0));
@@ -53,7 +58,7 @@ abstract class IntPrecisionHelper
     public static function fromFloat(float $value, bool $lessPrecise = false): int
     {
         if ($lessPrecise) {
-            return intval($value * static::PRECISION_FACTOR);
+            return intval(round($value * static::PRECISION_FACTOR));
         }
 
         return intval(bcround(bcmul(strval($value), strval(static::PRECISION_FACTOR), static::BCMATH_SCALE), 0));
@@ -71,21 +76,27 @@ abstract class IntPrecisionHelper
      */
     public static function normMul(int $a, int $b, int ...$numbers): int
     {
-        // Check for potential overflow
-        if ($a !== 0 && $b !== 0 && abs($a) > PHP_INT_MAX / abs($b)) {
+        // Use BCMath for precise calculation without intermediate rounding
+        $result = bcmul((string) $a, (string) $b, 0);
+        
+        foreach ($numbers as $number) {
+            $result = bcmul($result, (string) $number, 0);
+        }
+        
+        // Calculate how many times we need to divide by PRECISION_FACTOR
+        $divisorCount = 1 + count($numbers); // 1 for initial multiplication + 1 for each additional number
+        $divisor = bcpow((string) static::PRECISION_FACTOR, (string) $divisorCount, 0);
+        
+        // Perform the division with proper rounding
+        $finalResult = bcdiv($result, $divisor, 10); // Use high precision for intermediate calculation
+        $rounded = bcround($finalResult, 0);
+        
+        // Check for overflow before converting to int
+        if (bccomp($rounded, (string) PHP_INT_MAX) > 0 || bccomp($rounded, (string) PHP_INT_MIN) < 0) {
             throw new \OverflowException('Integer overflow detected in multiplication');
         }
-
-        $mulResult = intdiv($a * $b, static::PRECISION_FACTOR);
-
-        foreach ($numbers as $number) {
-            if ($mulResult !== 0 && $number !== 0 && abs($mulResult) > PHP_INT_MAX / abs($number)) {
-                throw new \OverflowException('Integer overflow detected in multiplication');
-            }
-            $mulResult = intdiv($mulResult * $number, static::PRECISION_FACTOR);
-        }
-
-        return $mulResult;
+        
+        return (int) $rounded;
     }
 
     /**
@@ -116,7 +127,8 @@ abstract class IntPrecisionHelper
      */
     public static function toView(int $value, int $decimalPlaces = self::DECIMAL_PLACES): string
     {
-        return bcdiv(strval($value), strval(static::PRECISION_FACTOR), $decimalPlaces);
+        $result = bcdiv(strval($value), strval(static::PRECISION_FACTOR), max($decimalPlaces, static::DECIMAL_PLACES));
+        return bcround($result, $decimalPlaces);
     }
 
     /**
