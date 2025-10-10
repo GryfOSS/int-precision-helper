@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1760131699">
+  <project timestamp="1760131699" name="Clover Coverage">
+    <package name="GryfOSS\Formatter">
+      <file name="/home/bartosz/salon/int-precision-helper/src/IntPrecisionHelper.php">
+        <class name="GryfOSS\Formatter\IntPrecisionHelper" namespace="GryfOSS\Formatter">
+          <metrics complexity="25" methods="11" coveredmethods="11" conditionals="0" coveredconditionals="0" statements="28" coveredstatements="28" elements="39" coveredelements="39"/>
+        </class>
+        <line num="31" type="method" name="fromString" visibility="public" complexity="3" crap="3" count="24"/>
+        <line num="33" type="stmt" count="24"/>
+        <line num="34" type="stmt" count="9"/>
+        <line num="37" type="stmt" count="15"/>
+        <line num="38" type="stmt" count="1"/>
+        <line num="41" type="stmt" count="14"/>
+        <line num="52" type="method" name="fromFloat" visibility="public" complexity="2" crap="2" count="11"/>
+        <line num="54" type="stmt" count="11"/>
+        <line num="55" type="stmt" count="1"/>
+        <line num="58" type="stmt" count="10"/>
+        <line num="71" type="method" name="normMul" visibility="public" complexity="8" crap="8" count="8"/>
+        <line num="74" type="stmt" count="8"/>
+        <line num="75" type="stmt" count="1"/>
+        <line num="78" type="stmt" count="7"/>
+        <line num="80" type="stmt" count="7"/>
+        <line num="81" type="stmt" count="3"/>
+        <line num="82" type="stmt" count="1"/>
+        <line num="84" type="stmt" count="2"/>
+        <line num="87" type="stmt" count="6"/>
+        <line num="99" type="method" name="normDiv" visibility="public" complexity="2" crap="2" count="5"/>
+        <line num="101" type="stmt" count="5"/>
+        <line num="102" type="stmt" count="1"/>
+        <line num="105" type="stmt" count="4"/>
+        <line num="116" type="method" name="toView" visibility="public" complexity="1" crap="1" count="4"/>
+        <line num="118" type="stmt" count="4"/>
+        <line num="128" type="method" name="toFloat" visibility="public" complexity="1" crap="1" count="1"/>
+        <line num="130" type="stmt" count="1"/>
+        <line num="142" type="method" name="calculatePercentage" visibility="public" complexity="2" crap="2" count="3"/>
+        <line num="144" type="stmt" count="3"/>
+        <line num="145" type="stmt" count="1"/>
+        <line num="148" type="stmt" count="2"/>
+        <line num="158" type="method" name="normAdd" visibility="public" complexity="1" crap="1" count="1"/>
+        <line num="160" type="stmt" count="1"/>
+        <line num="171" type="method" name="normSub" visibility="public" complexity="1" crap="1" count="2"/>
+        <line num="173" type="stmt" count="2"/>
+        <line num="183" type="method" name="normCompare" visibility="public" complexity="1" crap="1" count="1"/>
+        <line num="185" type="stmt" count="1"/>
+        <line num="194" type="method" name="isValid" visibility="public" complexity="3" crap="3" count="11"/>
+        <line num="196" type="stmt" count="11"/>
+        <metrics loc="199" ncloc="100" classes="1" methods="11" coveredmethods="11" conditionals="0" coveredconditionals="0" statements="28" coveredstatements="28" elements="39" coveredelements="39"/>
+      </file>
+    </package>
+    <metrics files="1" loc="199" ncloc="100" classes="1" methods="11" coveredmethods="11" conditionals="0" coveredconditionals="0" statements="28" coveredstatements="28" elements="39" coveredelements="39"/>
+  </project>
+</coverage>
