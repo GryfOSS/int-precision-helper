@@ -86,11 +86,11 @@ jobs:
         ./vendor/bin/behat --strict --no-interaction --format=pretty
     
     - name: Upload coverage reports (for debugging)
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: coverage-reports
         path: |
           coverage.xml
           coverage.txt
-        retention-days: 7
+        retention-days: 2
