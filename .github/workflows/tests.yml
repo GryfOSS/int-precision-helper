@@ -1,0 +1,96 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        php-version: ['8.4']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+        extensions: bcmath, xdebug
+        coverage: xdebug
+    
+    - name: Validate composer.json and composer.lock
+      run: composer validate --strict
+    
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ matrix.php-version }}-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-${{ matrix.php-version }}-
+    
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+    
+    - name: Run unit tests with coverage
+      run: |
+        XDEBUG_MODE=coverage ./vendor/bin/phpunit --coverage-text --coverage-clover=coverage.xml
+    
+    - name: Check 100% code coverage
+      run: |
+        # Install bc for mathematical operations
+        sudo apt-get update && sudo apt-get install -y bc
+        
+        # Extract coverage percentage from coverage.xml
+        COVERAGE=$(php -r "
+          \$xml = simplexml_load_file('coverage.xml');
+          \$lines = 0;
+          \$coveredlines = 0;
+          
+          // Look for line coverage metrics
+          foreach (\$xml->xpath('//metrics') as \$metrics) {
+            if (isset(\$metrics['statements'])) {
+              \$lines += (int)\$metrics['statements'];
+              \$coveredlines += (int)\$metrics['coveredstatements'];
+            }
+          }
+          
+          if (\$lines > 0) {
+            \$percentage = (\$coveredlines / \$lines) * 100;
+            echo number_format(\$percentage, 2);
+          } else {
+            echo '0.00';
+          }
+        ")
+        
+        echo "Code coverage: ${COVERAGE}%"
+        echo "Lines covered: $(php -r "\$xml = simplexml_load_file('coverage.xml'); \$lines = 0; \$covered = 0; foreach (\$xml->xpath('//metrics') as \$metrics) { if (isset(\$metrics['statements'])) { \$lines += (int)\$metrics['statements']; \$covered += (int)\$metrics['coveredstatements']; } } echo \"\$covered/\$lines\";")"
+        
+        # Check if coverage is 100%
+        if (( $(echo "$COVERAGE == 100.00" | bc -l) )); then
+          echo "✅ 100% code coverage achieved!"
+        else
+          echo "❌ Code coverage is ${COVERAGE}%, expected 100%"
+          exit 1
+        fi
+    
+    - name: Run feature tests (Behat)
+      run: |
+        ./vendor/bin/behat --strict --no-interaction --format=pretty
+    
+    - name: Upload coverage reports (for debugging)
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: coverage-reports
+        path: |
+          coverage.xml
+          coverage.txt
+        retention-days: 7
