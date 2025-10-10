@@ -18,6 +18,7 @@ abstract class IntPrecisionHelper
 {
     protected const PRECISION_FACTOR = 100;
     protected const DECIMAL_PLACES = 2;
+    protected const BCMATH_SCALE = 10;
 
     /**
      * Converts from string to normalized int.
@@ -38,7 +39,7 @@ abstract class IntPrecisionHelper
             return intval(floatval($value) * static::PRECISION_FACTOR);
         }
 
-        return intval(bcround(bcmul($value, strval(static::PRECISION_FACTOR)), 0));
+        return intval(bcround(bcmul($value, strval(static::PRECISION_FACTOR), static::BCMATH_SCALE), 0));
     }
 
     /**
@@ -55,7 +56,7 @@ abstract class IntPrecisionHelper
             return intval($value * static::PRECISION_FACTOR);
         }
 
-        return intval(bcround(bcmul(strval($value), strval(static::PRECISION_FACTOR)), 0));
+        return intval(bcround(bcmul(strval($value), strval(static::PRECISION_FACTOR), static::BCMATH_SCALE), 0));
     }
 
     /**

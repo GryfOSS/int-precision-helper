@@ -463,9 +463,9 @@ class IntPrecisionHelperTest extends TestCase
         $result = IntPrecisionHelper::fromString('999999.99');
         $this->assertSame(99999999, $result);
 
-        // Test precision with many decimal places - bcround will round to 2 places when multiplied by 100
+        // Test precision with many decimal places - should round properly
         $result = IntPrecisionHelper::fromString('12.3456789');
-        $this->assertSame(1234, $result); // Should round to 12.34 -> 1234
+        $this->assertSame(1235, $result); // 12.3456789 * 100 = 1234.56789, rounded = 1235
 
         // Test toView with large numbers
         $result = IntPrecisionHelper::toView(99999999);

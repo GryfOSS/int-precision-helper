@@ -76,4 +76,22 @@ try {
     echo "✗ Unexpected error: " . $e->getMessage() . "\n";
 }
 
+// Test specific value: "1.368852459" should give 137
+echo "7. Specific Test Case:\n";
+$testValue = "1.368852459";
+
+// Test with default bcmath scale
+bcscale(0);
+$result_scale0 = IntPrecisionHelper::fromString($testValue);
+
+// Test with higher bcmath scale
+bcscale(10);
+$result_scale10 = IntPrecisionHelper::fromString($testValue);
+
+echo "fromString('$testValue') with bcscale(0) = $result_scale0\n";
+echo "fromString('$testValue') with bcscale(10) = $result_scale10\n";
+echo "Expected: 137\n";
+echo "Match (bcscale 0): " . ($result_scale0 === 137 ? "✓ YES" : "✗ NO") . "\n";
+echo "Match (bcscale 10): " . ($result_scale10 === 137 ? "✓ YES" : "✗ NO") . "\n\n";
+
 echo "\n=== All tests completed ===\n";
