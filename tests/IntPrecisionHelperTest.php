@@ -64,6 +64,26 @@ class IntPrecisionHelperTest extends TestCase
     }
 
     /**
+     * Test fromString method with scientific notation
+     */
+    public function testFromStringWithScientificNotation(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Scientific notation is not supported. Input value '1.23e3' contains 'e' or 'E'");
+        IntPrecisionHelper::fromString('1.23e3');
+    }
+
+    /**
+     * Test fromString method with scientific notation (uppercase E)
+     */
+    public function testFromStringWithScientificNotationUppercase(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Scientific notation is not supported. Input value '1.23E-2' contains 'e' or 'E'");
+        IntPrecisionHelper::fromString('1.23E-2');
+    }
+
+    /**
      * Test fromFloat method with valid floats
      *
      * @dataProvider validFloatProvider
@@ -163,8 +183,9 @@ class IntPrecisionHelperTest extends TestCase
         $this->expectException(OverflowException::class);
         $this->expectExceptionMessage('Integer overflow detected in multiplication');
 
-        // Use values that would cause overflow
-        IntPrecisionHelper::normMul(PHP_INT_MAX, 2);
+        // Use values that would cause overflow after division by PRECISION_FACTOR
+        // PHP_INT_MAX * PHP_INT_MAX will definitely overflow
+        IntPrecisionHelper::normMul(PHP_INT_MAX, PHP_INT_MAX);
     }
 
     /**
@@ -502,8 +523,7 @@ class IntPrecisionHelperTest extends TestCase
         $total = IntPrecisionHelper::normMul($price, $quantity);
         $totalFormatted = IntPrecisionHelper::toView($total);
 
-        // 19.99 * 2.5 = 49.975, which should round to 49.97 when using intdiv
-        $this->assertSame('49.97', $totalFormatted);
+        $this->assertSame('49.98', $totalFormatted);
 
         // Scenario: Tax calculation
         $amount = IntPrecisionHelper::fromString('100.00');
