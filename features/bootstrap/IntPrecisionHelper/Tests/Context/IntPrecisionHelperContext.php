@@ -43,7 +43,7 @@ class IntPrecisionHelperContext implements Context
     {
         // Remove surrounding quotes if present
         $cleanInput = trim($input, '"');
-        
+
         try {
             $this->result = IntPrecisionHelper::fromString($cleanInput, $this->lessPreciseMode);
             $this->exceptionMessage = null;
@@ -174,7 +174,7 @@ class IntPrecisionHelperContext implements Context
         // Use values that would cause overflow
         $largeValue1 = intval(PHP_INT_MAX / 2);
         $largeValue2 = intval(PHP_INT_MAX / 2);
-        
+
         try {
             $this->result = IntPrecisionHelper::normMul($largeValue1, $largeValue2);
             $this->exceptionMessage = null;
@@ -304,7 +304,7 @@ class IntPrecisionHelperContext implements Context
     {
         // Remove surrounding quotes if present
         $cleanMessage = trim($message, '"');
-        
+
         Assert::assertEquals(InvalidArgumentException::class, $this->exceptionType);
         Assert::assertEquals($cleanMessage, $this->exceptionMessage);
     }
@@ -334,5 +334,224 @@ class IntPrecisionHelperContext implements Context
     {
         Assert::assertEquals(OverflowException::class, $this->exceptionType);
         Assert::assertEquals($message, $this->exceptionMessage);
+    }
+
+    // Additional properties for normalize/denormalize tests
+    private mixed $normalizeInput = null;
+    private mixed $normalizeResult = null;
+    private float $denormalizeResult = 0.0;
+    private string $inputType = '';
+
+    /**
+     * @When I normalize the float value :input
+     */
+    public function iNormalizeTheFloatValue(float $input): void
+    {
+        $this->inputType = 'float';
+        $this->normalizeInput = $input;
+        try {
+            $this->normalizeResult = IntPrecisionHelper::normalize($input);
+            $this->result = $this->normalizeResult;
+            $this->exceptionMessage = null;
+            $this->exceptionType = null;
+        } catch (\Exception $e) {
+            $this->exceptionMessage = $e->getMessage();
+            $this->exceptionType = get_class($e);
+            $this->normalizeResult = null;
+        }
+    }
+
+    /**
+     * @When I normalize the string value :input
+     */
+    public function iNormalizeTheStringValue(string $input): void
+    {
+        $this->inputType = 'string';
+        // Remove surrounding quotes if present
+        $cleanInput = trim($input, '"');
+        $this->normalizeInput = $cleanInput;
+        try {
+            $this->normalizeResult = IntPrecisionHelper::normalize($cleanInput);
+            $this->result = $this->normalizeResult;
+            $this->exceptionMessage = null;
+            $this->exceptionType = null;
+        } catch (\Exception $e) {
+            $this->exceptionMessage = $e->getMessage();
+            $this->exceptionType = get_class($e);
+            $this->normalizeResult = null;
+        }
+    }
+
+    /**
+     * @When I normalize the integer value :input
+     */
+    public function iNormalizeTheIntegerValue(int $input): void
+    {
+        $this->inputType = 'integer';
+        $this->normalizeInput = $input;
+        try {
+            $this->normalizeResult = IntPrecisionHelper::normalize($input);
+            $this->result = $this->normalizeResult;
+            $this->exceptionMessage = null;
+            $this->exceptionType = null;
+        } catch (\Exception $e) {
+            $this->exceptionMessage = $e->getMessage();
+            $this->exceptionType = get_class($e);
+            $this->normalizeResult = null;
+        }
+    }
+
+    /**
+     * @When I normalize the float value :input using less precise mode
+     */
+    public function iNormalizeTheFloatValueUsingLessPreciseMode(float $input): void
+    {
+        $this->inputType = 'float';
+        $this->normalizeInput = $input;
+        try {
+            $this->normalizeResult = IntPrecisionHelper::normalize($input, true);
+            $this->result = $this->normalizeResult;
+            $this->exceptionMessage = null;
+            $this->exceptionType = null;
+        } catch (\Exception $e) {
+            $this->exceptionMessage = $e->getMessage();
+            $this->exceptionType = get_class($e);
+            $this->normalizeResult = null;
+        }
+    }
+
+    /**
+     * @When I normalize the string value :input using less precise mode
+     */
+    public function iNormalizeTheStringValueUsingLessPreciseMode(string $input): void
+    {
+        $this->inputType = 'string';
+        // Remove surrounding quotes if present
+        $cleanInput = trim($input, '"');
+        $this->normalizeInput = $cleanInput;
+        try {
+            $this->normalizeResult = IntPrecisionHelper::normalize($cleanInput, true);
+            $this->result = $this->normalizeResult;
+            $this->exceptionMessage = null;
+            $this->exceptionType = null;
+        } catch (\Exception $e) {
+            $this->exceptionMessage = $e->getMessage();
+            $this->exceptionType = get_class($e);
+            $this->normalizeResult = null;
+        }
+    }
+
+    /**
+     * @When I denormalize the normalized integer :input
+     */
+    public function iDenormalizeTheNormalizedInteger(int $input): void
+    {
+        try {
+            $this->denormalizeResult = IntPrecisionHelper::denormalize($input);
+            $this->floatResult = $this->denormalizeResult;
+            $this->exceptionMessage = null;
+            $this->exceptionType = null;
+        } catch (\Exception $e) {
+            $this->exceptionMessage = $e->getMessage();
+            $this->exceptionType = get_class($e);
+            $this->denormalizeResult = 0.0;
+        }
+    }
+
+    /**
+     * @When I denormalize the normalized result
+     * @And I denormalize the normalized result
+     */
+    public function iDenormalizeTheNormalizedResult(): void
+    {
+        if ($this->normalizeResult !== null) {
+            $this->iDenormalizeTheNormalizedInteger($this->normalizeResult);
+        }
+    }
+
+    /**
+     * @When I attempt to normalize an invalid input type :input
+     */
+    public function iAttemptToNormalizeAnInvalidInputType(string $inputType): void
+    {
+        $testValue = match ($inputType) {
+            'array' => [1, 2, 3],
+            'object' => (object) ['key' => 'value'],
+            'boolean' => true,
+            default => null
+        };
+
+        try {
+            $this->normalizeResult = IntPrecisionHelper::normalize($testValue);
+            $this->exceptionMessage = null;
+            $this->exceptionType = null;
+        } catch (\Exception $e) {
+            $this->exceptionMessage = $e->getMessage();
+            $this->exceptionType = get_class($e);
+            $this->normalizeResult = null;
+        }
+    }
+
+    /**
+     * @When I attempt to normalize the string :input
+     * @When I attempt to normalize the string ":input"
+     */
+    public function iAttemptToNormalizeTheString(string $input): void
+    {
+        // Remove surrounding quotes if present
+        $cleanInput = trim($input, '"');
+        try {
+            $this->normalizeResult = IntPrecisionHelper::normalize($cleanInput);
+            $this->exceptionMessage = null;
+            $this->exceptionType = null;
+        } catch (\Exception $e) {
+            $this->exceptionMessage = $e->getMessage();
+            $this->exceptionType = get_class($e);
+            $this->normalizeResult = null;
+        }
+    }
+
+    /**
+     * @Then the normalize result should be :expected
+     */
+    public function theNormalizeResultShouldBe(int $expected): void
+    {
+        Assert::assertEquals($expected, $this->normalizeResult);
+    }
+
+    /**
+     * @Then the denormalize result should be :expected
+     */
+    public function theDenormalizeResultShouldBe(float $expected): void
+    {
+        Assert::assertEquals($expected, $this->denormalizeResult);
+    }
+
+    /**
+     * @Then the denormalized value should equal the original :expected
+     */
+    public function theDenormalizedValueShouldEqualTheOriginal(float $expected): void
+    {
+        Assert::assertEquals($expected, $this->denormalizeResult);
+    }
+
+    /**
+     * @Then an InvalidArgumentException should be thrown with message containing :messagePart
+     */
+    public function anInvalidArgumentExceptionShouldBeThrownWithMessageContaining(string $messagePart): void
+    {
+        Assert::assertEquals(InvalidArgumentException::class, $this->exceptionType);
+        Assert::assertStringContainsString($messagePart, $this->exceptionMessage);
+    }
+
+    /**
+     * @Then the round-trip should preserve precision within :tolerance
+     */
+    public function theRoundTripShouldPreservePrecisionWithin(float $tolerance): void
+    {
+        $originalValue = is_string($this->normalizeInput) ? (float) $this->normalizeInput : (float) $this->normalizeInput;
+        $difference = abs($originalValue - $this->denormalizeResult);
+        Assert::assertLessThanOrEqual($tolerance, $difference,
+            "Round-trip precision loss too high. Original: {$originalValue}, Result: {$this->denormalizeResult}, Difference: {$difference}");
     }
 }
