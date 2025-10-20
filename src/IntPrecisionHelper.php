@@ -78,24 +78,24 @@ abstract class IntPrecisionHelper
     {
         // Use BCMath for precise calculation without intermediate rounding
         $result = bcmul((string) $a, (string) $b, 0);
-        
+
         foreach ($numbers as $number) {
             $result = bcmul($result, (string) $number, 0);
         }
-        
+
         // Calculate how many times we need to divide by PRECISION_FACTOR
         $divisorCount = 1 + count($numbers); // 1 for initial multiplication + 1 for each additional number
         $divisor = bcpow((string) static::PRECISION_FACTOR, (string) $divisorCount, 0);
-        
+
         // Perform the division with proper rounding
         $finalResult = bcdiv($result, $divisor, 10); // Use high precision for intermediate calculation
         $rounded = bcround($finalResult, 0);
-        
+
         // Check for overflow before converting to int
         if (bccomp($rounded, (string) PHP_INT_MAX) > 0 || bccomp($rounded, (string) PHP_INT_MIN) < 0) {
             throw new \OverflowException('Integer overflow detected in multiplication');
         }
-        
+
         return (int) $rounded;
     }
 
@@ -207,5 +207,47 @@ abstract class IntPrecisionHelper
     public static function isValid($value): bool
     {
         return is_int($value) && $value >= PHP_INT_MIN && $value <= PHP_INT_MAX;
+    }
+
+    /**
+     * Normalizes a value (float, string, or int) to the internal integer representation.
+     * This is a convenience method that automatically detects the input type.
+     * For example: normalize(12.34) -> 1234, normalize("12.34") -> 1234, normalize(12) -> 1200
+     *
+     * @param float|string|int $value The value to normalize
+     * @param bool $lessPrecise Less precise mode uses float conversion, which may lead to precision loss for very large numbers, but is faster.
+     * @return int The normalized integer value
+     * @throws InvalidArgumentException If the input is not a valid number
+     */
+    public static function normalize($value, bool $lessPrecise = false): int
+    {
+        if (is_int($value)) {
+            return $value * static::PRECISION_FACTOR;
+        }
+
+        if (is_float($value)) {
+            return static::fromFloat($value, $lessPrecise);
+        }
+
+        if (is_string($value)) {
+            return static::fromString($value, $lessPrecise);
+        }
+
+        throw new \InvalidArgumentException(sprintf(
+            "Input value must be a float, string, or int. Got %s",
+            gettype($value)
+        ));
+    }
+
+    /**
+     * Denormalizes a normalized integer back to its decimal representation as a float.
+     * For example: denormalize(1234) -> 12.34
+     *
+     * @param int $normalizedValue The normalized integer value
+     * @return float The denormalized float value
+     */
+    public static function denormalize(int $normalizedValue): float
+    {
+        return static::toFloat($normalizedValue);
     }
 }

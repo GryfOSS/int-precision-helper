@@ -541,4 +541,146 @@ class IntPrecisionHelperTest extends TestCase
 
         $this->assertSame(4000, $finalPrice); // $40.00
     }
+
+    /**
+     * Test normalize method with float input
+     */
+    public function testNormalizeWithFloat(): void
+    {
+        $result = IntPrecisionHelper::normalize(12.34);
+        $this->assertSame(1234, $result);
+
+        $result = IntPrecisionHelper::normalize(0.0);
+        $this->assertSame(0, $result);
+
+        $result = IntPrecisionHelper::normalize(-5.67);
+        $this->assertSame(-567, $result);
+    }
+
+    /**
+     * Test normalize method with string input
+     */
+    public function testNormalizeWithString(): void
+    {
+        $result = IntPrecisionHelper::normalize("12.34");
+        $this->assertSame(1234, $result);
+
+        $result = IntPrecisionHelper::normalize("0");
+        $this->assertSame(0, $result);
+
+        $result = IntPrecisionHelper::normalize("-5.67");
+        $this->assertSame(-567, $result);
+
+        $result = IntPrecisionHelper::normalize("100");
+        $this->assertSame(10000, $result);
+    }
+
+    /**
+     * Test normalize method with integer input
+     */
+    public function testNormalizeWithInteger(): void
+    {
+        $result = IntPrecisionHelper::normalize(12);
+        $this->assertSame(1200, $result);
+
+        $result = IntPrecisionHelper::normalize(0);
+        $this->assertSame(0, $result);
+
+        $result = IntPrecisionHelper::normalize(-5);
+        $this->assertSame(-500, $result);
+    }
+
+    /**
+     * Test normalize method with lessPrecise mode
+     */
+    public function testNormalizeWithLessPreciseMode(): void
+    {
+        $result = IntPrecisionHelper::normalize(12.34, true);
+        $this->assertSame(1234, $result);
+
+        $result = IntPrecisionHelper::normalize("99.99", true);
+        $this->assertSame(9999, $result);
+    }
+
+    /**
+     * Test normalize method with invalid input types
+     */
+    public function testNormalizeWithInvalidInputTypes(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Input value must be a float, string, or int. Got array");
+
+        IntPrecisionHelper::normalize([1, 2, 3]);
+    }
+
+    /**
+     * Test normalize method with invalid string input
+     */
+    public function testNormalizeWithInvalidString(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Input value 'invalid' is not a valid number");
+
+        IntPrecisionHelper::normalize("invalid");
+    }
+
+    /**
+     * Test normalize method with scientific notation
+     */
+    public function testNormalizeWithScientificNotation(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Scientific notation is not supported. Input value '1.23e2' contains 'e' or 'E'");
+
+        IntPrecisionHelper::normalize("1.23e2");
+    }
+
+    /**
+     * Test denormalize method
+     */
+    public function testDenormalize(): void
+    {
+        $result = IntPrecisionHelper::denormalize(1234);
+        $this->assertSame(12.34, $result);
+
+        $result = IntPrecisionHelper::denormalize(0);
+        $this->assertSame(0.0, $result);
+
+        $result = IntPrecisionHelper::denormalize(-567);
+        $this->assertSame(-5.67, $result);
+
+        $result = IntPrecisionHelper::denormalize(100);
+        $this->assertSame(1.0, $result);
+    }
+
+    /**
+     * Test normalize and denormalize round-trip consistency
+     */
+    public function testNormalizeAndDenormalizeRoundTrip(): void
+    {
+        $originalValues = [12.34, 0.0, -5.67, 100.0, 0.01, 99.99];
+
+        foreach ($originalValues as $original) {
+            $normalized = IntPrecisionHelper::normalize($original);
+            $denormalized = IntPrecisionHelper::denormalize($normalized);
+            $this->assertEqualsWithDelta($original, $denormalized, 0.001,
+                "Round-trip failed for value {$original}");
+        }
+    }
+
+    /**
+     * Test normalize and denormalize with string input round-trip
+     */
+    public function testNormalizeStringAndDenormalizeRoundTrip(): void
+    {
+        $stringValues = ["12.34", "0.00", "-5.67", "100.00", "0.01", "99.99"];
+
+        foreach ($stringValues as $stringValue) {
+            $normalized = IntPrecisionHelper::normalize($stringValue);
+            $denormalized = IntPrecisionHelper::denormalize($normalized);
+            $originalFloat = (float) $stringValue;
+            $this->assertEqualsWithDelta($originalFloat, $denormalized, 0.001,
+                "Round-trip failed for string value {$stringValue}");
+        }
+    }
 }
